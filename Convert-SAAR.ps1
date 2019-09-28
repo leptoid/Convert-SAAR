@@ -1,22 +1,28 @@
 <#
 .SYNOPSIS
     Parse DD Form 2875 for user account creation data, using iTextSharp library.
-
 .DESCRIPTION
     Parse DD Form 2875 for user account creation data, using iTextSharp library.
-
 .NOTES
     Author: JBear
     Date: 11/10/2018
     Version: 1.0
-
     Notes: Requires iTextSharp library.
+    
+    Modified by Nathan Kramer
+    Date 09/28/2019
+    Version 1.1
 #>
 
 #Load iTextSharp .NET library
 try {
     
-    Add-Type -Path 'C:\Windows\System32\itextsharp.dll'
+    #Set local path to itextsharp.dll; *Hint: Can be saved anywhere you want/not restricted to System32.
+    #Allowing the computer to do the work; comment out next 2 line if script acts erratic
+    $itextsharp = ls -Recurse .\itextsharp.dll
+    Add-Type -Path $itextsharp[0]
+    #Uncomment below to set manually (when auto is acting erratic/taking too long
+    #Add-Type -Path 'D:\Scripts\tabula\.powershell\test\itextsharp.dll'
 }
 
 catch {
@@ -26,7 +32,7 @@ catch {
 }
 
 #Retrieve files from specified SAAR directory
-$Files = (Get-ChildItem 'C:\users\Averagebear\Desktop\SAAR\').FullName
+$Files = (Get-ChildItem 'D:\Scripts\tabula\.powershell\test\Tickets\').FullName
 
 foreach($File in $Files) {
 
@@ -38,6 +44,7 @@ foreach($File in $Files) {
 
     #Split name into first, middle, and last
     $Name = $Data.Name.Split(',').Split(" ") | where {$_ -ne ''}
+
 
     #Verify user signature
     $UserSignature = $PDF.AcroFields.VerifySignature("usersign")
@@ -51,8 +58,17 @@ foreach($File in $Files) {
         LastName = $Name[0].Trim()
 
         #User middle initial
-        MiddleIn = $Name[2].Trim()
+        MiddleIn =            
+        #Error handling for null middle initials
+        if(!([String]::IsNullOrWhiteSpace($Name[2]))) {
+          
+            $Name[2].Trim()
+        }
 
+        else {
+            $Name[2] 
+        }
+        
         #User CAC/EDI number
         UserID = 
         
